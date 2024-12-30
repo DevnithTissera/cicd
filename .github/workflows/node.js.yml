@@ -1,0 +1,56 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Setup Node.js for frontend
+    - name: Use Node.js ${{ matrix.node-version }} for frontend
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install frontend dependencies
+      run: npm ci
+      working-directory: ./frontend
+
+    - name: Build frontend (if applicable)
+      run: npm run build --if-present
+      working-directory: ./frontend
+
+    - name: Run frontend tests
+      run: npm test
+      working-directory: ./frontend
+
+    # Setup Node.js for backend
+    - name: Use Node.js ${{ matrix.node-version }} for backend
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install backend dependencies
+      run: npm ci
+      working-directory: ./backend
+
+    - name: Build backend (if applicable)
+      run: npm run build --if-present
+      working-directory: ./backend
+
+    - name: Run backend tests
+      run: npm test
+      working-directory: ./backend
